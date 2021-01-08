@@ -1,0 +1,83 @@
+---
+version: '3.5'
+services:
+  victoriametrics:
+    container_name: victoriametrics
+    image: victoriametrics/victoria-metrics:v1.51.0
+    ports:
+      - 8428:8428
+    volumes:
+      - ./.vm_data:/victoria-metrics-data
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '-envflag.enable'
+    environment:
+      insert_maxQueueDuration: 15s
+      maxConcurrentInserts: 1
+      maxInsertRequestSize: 256KB
+
+      promscrape_config: /etc/prometheus/prometheus.yml
+
+      bigMergeConcurrency: 1
+      smallMergeConcurrency: 1
+
+      memory_allowedBytes: 256MB
+
+      csvTrimTimestamp: 1s
+      dedup_minScrapeInterval: 5s
+      precisionBits: 24
+      retentionPeriod: 1y
+
+      httpAuth_username: kp_resort_meteo
+      httpAuth_password: kp_resort_meteo
+    networks:
+      - vm_net
+    restart: unless-stopped
+  grafana:
+    # admin pass
+    container_name: grafana
+    image: grafana/grafana:7.3.6
+    user: root
+    depends_on:
+      - "victoriametrics"
+    ports:
+      - 80:3000
+    volumes:
+      - ./.grafana_data:/var/lib/grafana
+      - ./provisioning/:/etc/grafana/provisioning/
+      - ./dashboards/:/var/lib/grafana/dashboards/
+    environment:
+      GF_INSTALL_PLUGINS: briangann-gauge-panel
+      GF_RENDERING_SERVER_URL: http://grafana-renderer:8081/render
+      GF_RENDERING_CALLBACK_URL: http://grafana:3000/
+      GF_ADMIN_PASSWORD: kp_resort_meteo
+    networks:
+      - vm_net
+    restart: unless-stopped
+  node-exporter:
+    container_name: node-exporter
+    image: prom/node-exporter:v1.0.1
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command: 
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - --collector.filesystem.ignored-mount-points
+      - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+    networks:
+      - vm_net
+    restart: unless-stopped
+  grafana-renderer:
+    container_name: grafana-renderer
+    image: grafana/grafana-image-renderer:2.0.0
+    ports:
+      - 8081:8081
+    environment:
+      ENABLE_METRICS: 'true'
+    networks:
+      - vm_net
+    restart: unless-stopped
+networks:
+  vm_net:

@@ -1,0 +1,4 @@
+*/.terraform
+*/.vm_data
+*/.grafana_data
+*/terraform.tfstate*
