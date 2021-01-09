@@ -12,7 +12,7 @@ resource "yandex_compute_instance" "vm" {
     preemptible = true
   }
 
-  platform_id = "standard-v1"
+  platform_id = "standard-v2"
 
   boot_disk {
     auto_delete = true
@@ -20,7 +20,7 @@ resource "yandex_compute_instance" "vm" {
     initialize_params {
       # ubuntu-1804-lts-1593428267-1593437760
       image_id = "fd8vqk0bcfhn31stn2ts"
-      size     = 10
+      size     = 8
       type     = "network-ssd"
     }
   }
@@ -32,8 +32,7 @@ resource "yandex_compute_instance" "vm" {
 
   metadata = {
     serial-port-enable = "1"
-    # user-data          = file("ignition.json")
-    ssh-keys = "core:${file("~/.ssh/id_rsa.pub")}"
+    ssh-keys           = "ubuntu:${file("~/.ssh/id_rsa.pub")}"
   }
 }
 
