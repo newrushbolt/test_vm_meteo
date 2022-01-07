@@ -7,6 +7,8 @@ datasources:
     url: http://victoriametrics:8428
     isDefault: true
 
-    basicAuth: true
-    basicAuthUser: kp_resort_meteo
-    basicAuthPassword: kp_resort_meteo
+    # Broken in Grafana 8.x.x
+    # basicAuth: true
+    # secureJsonData:
+    #   basicAuthUser: kp_resort_meteo
+    #   basicAuthPassword: kp_resort_meteo

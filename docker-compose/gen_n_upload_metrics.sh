@@ -4,7 +4,7 @@ VM_ADDR='http://localhost:8428'
 VM_LOGIN=kp_resort_meteo
 VM_PASSWORD=kp_resort_meteo
 CUR_DATE="$(TZ=UTC date '+%d-%m-%y_%H-%M-%S')"
-SRV_ID="$(( RANDOM % 999 ))"
+SRV_ID="666"
 
 for PLACE in $PLACES; do
 	WIND_SPEED="$(( RANDOM % 30 )).$(( RANDOM % 10 ))"
