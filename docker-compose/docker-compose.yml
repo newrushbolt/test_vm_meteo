@@ -3,7 +3,7 @@ version: '3.5'
 services:
   victoriametrics:
     container_name: victoriametrics
-    image: victoriametrics/victoria-metrics:v1.51.0
+    image: victoriametrics/victoria-metrics:v1.71.0
     ports:
       - 8428:8428
     volumes:
@@ -16,6 +16,7 @@ services:
       maxConcurrentInserts: 1
       maxInsertRequestSize: 256KB
 
+      selfScrapeInterval: 5s
       promscrape_config: /etc/prometheus/prometheus.yml
 
       bigMergeConcurrency: 1
@@ -28,15 +29,15 @@ services:
       precisionBits: 24
       retentionPeriod: 1y
 
-      httpAuth_username: kp_resort_meteo
-      httpAuth_password: kp_resort_meteo
+      # Broken in Grafana 8.x.x
+      # httpAuth_username: kp_resort_meteo
+      # httpAuth_password: kp_resort_meteo
     networks:
       - vm_net
     restart: unless-stopped
   grafana:
-    # admin pass
     container_name: grafana
-    image: grafana/grafana:7.3.6
+    image: grafana/grafana:8.3.3
     user: root
     depends_on:
       - "victoriametrics"
@@ -46,17 +47,19 @@ services:
       - ./.grafana_data:/var/lib/grafana
       - ./provisioning/:/etc/grafana/provisioning/
       - ./dashboards/:/var/lib/grafana/dashboards/
+      - ./spectraphilic-windrose-panel:/var/lib/grafana/plugins/spectraphilic-windrose-panel:ro
     environment:
       GF_INSTALL_PLUGINS: briangann-gauge-panel
+      GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: spectraphilic-windrose-panel
       GF_RENDERING_SERVER_URL: http://grafana-renderer:8081/render
       GF_RENDERING_CALLBACK_URL: http://grafana:3000/
-      GF_ADMIN_PASSWORD: kp_resort_meteo
+      GF_SECURITY_ADMIN_PASSWORD: kp_resort_meteo
     networks:
       - vm_net
     restart: unless-stopped
   node-exporter:
     container_name: node-exporter
-    image: prom/node-exporter:v1.0.1
+    image: prom/node-exporter:v1.3.1
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -71,7 +74,7 @@ services:
     restart: unless-stopped
   grafana-renderer:
     container_name: grafana-renderer
-    image: grafana/grafana-image-renderer:2.0.0
+    image: grafana/grafana-image-renderer:3.3.0
     ports:
       - 8081:8081
     environment:
